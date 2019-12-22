@@ -8,7 +8,6 @@ const UserSchema = new mongoose.Schema({
     Username: {
         type: String,
         required: true,
-        dropDups: true,
         unique: true
     },
     Password: {
@@ -44,14 +43,14 @@ const UserSchema = new mongoose.Schema({
         default: 3
     }
 
-});
+},{collection:'Users'});
 
 
 const User = mongoose.model('User', UserSchema);
 
 
 //Create New User
-router.post('/Register', async (req, res) => { //sends post request to /Authors/unFollow End point through the router
+router.post('/Register', async (req, res) => { 
     var NewUser = new User();
     console.log(req.body);
     NewUser.Username = req.body.Username;
@@ -84,31 +83,55 @@ router.post('/Register', async (req, res) => { //sends post request to /Authors/
 
 
 //Get User
-router.post('/Login', async (req, res) => { //sends post request to /Authors/unFollow End point through the router
+router.post('/Login', async (req, res) => { 
 
-
-    mongoose.connection.collection("Users").findOne({ AuthorId: req.query.auth_id },
-        (err, doc) => {
-
-            if (!doc || err) {
-                //console.log(doc);
-                res.status(404).json({  // sends a json with 404 code
-                    success: false,  // user not retrieved  
-                    "Message": "Author ID not  found !"
-                });
-            }
-            else {
-                //console.log(doc);
-                res.status(200).json(doc);
-
-            }
-        }
-
-
-    )
+    let check = await User.findOne({ Username: req.body.Username,Password:req.body.Password });
+    if (check) return res.status(200).send({ "ReturnMsg": "LoggedIn" });
+    else 
+    res.status(400).send({"ReturnedMsg":"Wrong User Name or password "});
+   
 });
 
+//Change User Authority
+router.post('/Authority', async (req, res) => { 
 
+    let check = await User.findOneAndUpdate({ Username: req.body.Username},{Priv:req.body.Priv});
+    if (check) return res.status(200).send({ "ReturnMsg": "User Authority Updated" });
+    else 
+    res.status(400).send({"ReturnedMsg":"error not updated"});
+   
+});
+
+//Update User Details
+router.post('/Update', async (req, res) => { 
+
+    let check = await User.findOneAndUpdate({ Username: req.body.Username},{
+       // priv not updatable only by admin
+       //username and email not updatable
+        Password:req.body.Password,
+        FirstName:req.body.FirstName,
+        LastName:req.body.LastName,
+        Birthdate:req.body.Birthdate,
+        Gender:req.body.Gender,
+        City:req.body.City,
+        Address:req.body.Address,
+        Email:req.body.Email
+    });
+    if (check) return res.status(200).send({ "ReturnMsg": "User details Updated" });
+    else 
+    res.status(400).send({"ReturnedMsg":"error not updated"});
+   
+});
+
+//Remove User
+router.post('/Remove', async (req, res) => { 
+
+    let check = await User.remove({ Username: req.body.Username});
+    if (check) return res.status(200).send({ "ReturnMsg": "User Removed" });
+    else 
+    res.status(400).send({"ReturnedMsg":"error not removed"});
+   
+});
 
 module.exports = router;
 // ///////////////////////////////////////////////////////////////////////////////////
@@ -274,7 +297,7 @@ module.exports = router;
 // */
 
 // //UNFollow Author
-// router.post('/unFollow', async (req, res) => { //sends post request to /Authors/unFollow End point through the router
+// router.post('/unFollow', async (req, res) => { 
 //     /* console.log(req.body.auth_id);
 //     console.log(req.auth_id);
 //     console.log(req.params.auth_id);
