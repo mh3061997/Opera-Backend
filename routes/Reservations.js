@@ -4,61 +4,100 @@ const express = require('express');
 const router = express.Router();
 
 const ReservationSchema = new mongoose.Schema({
-  ReservationId:{
-    type:String,
-    unique:true,
+  ReservationId: {
+    type: String,
+    unique: true,
   },
-  Username:{
-    type:String
+  Username: {
+    type: String
   },
-  EventId:{
-    type:String
+  EventId: {
+    type: String
   },
-  CreditCardNumber:{
-    type:String,
+  CreditCardNumber: {
+    type: String,
   },
   Seats: [{
-      SeatNumber:String,
-      IsReserved:Boolean
+    type:String
   }]
-
-},{collection:'Reservations'});
+}, { collection: 'Reservations' });
 const Reservation = mongoose.model('Reservation', ReservationSchema);
 
 
-//get reservation by id
-router.get('/', async (req,res) => {
+//get reservation by EventID 
+router.get('/', async (req, res) => {
 
-    /*
-    console.log(req.params);
-    console.log(req.params.auth_name);
-    console.log(req.query.auth_name); /// ONLY WORKING
-    console.log(req.params.auth_name.auth_name);
-   */
-  console.log(req.query.ReservationId); /// ONLY WORKING
+  /*
+  console.log(req.params);
+  console.log(req.params.auth_name);
+  console.log(req.query.auth_name); /// ONLY WORKING
+  console.log(req.params.auth_name.auth_name);
+ */
+  //console.log(req.query.ReservationId); /// ONLY WORKING
 
-  
-    mongoose.connection.collection("Reservations").findOne({ReservationId:req.query.ReservationId},
-    (err,doc) =>{
-     
-      if(!doc || err)
-      {
+
+  mongoose.connection.collection("Reservations").findOne({ EventId: req.query.EventId },
+    (err, doc) => {
+
+      if (!doc || err) {
         //console.log(doc);
         res.status(400).json({  // sends a json with 404 code
-          success: false ,  // user not retrieved  
-           "Message":"Reservation not  found !"});
+          success: false,  // user not retrieved  
+          "Message": "Reservation not  found !"
+        });
       }
-       else
-       {
-       //console.log(doc);
-       res.status(200).json(doc);
-      
-       }
-      }
-  
-  
-    )}); 
-    
+      else {
+        //console.log(doc);
+        res.status(200).json(doc);
 
-        
-  module.exports = router;
+      }
+    }
+
+
+  )
+});
+
+//Create New Reservation
+router.post('/Create', async (req, res) => {
+
+  var NewReservation = new Reservation();
+  console.log(req.body);
+  console.log(req.body.Seats);
+  NewReservation.ReservationId = req.body.ReservationId;
+  NewReservation.Username = req.body.Username;
+  NewReservation.EventId = req.body.EventId;
+  NewReservation.CreditCardNumber = req.body.CreditCardNumber;
+  NewReservation.Seats = req.body.Seats; //array of seat numbers
+console.log(NewReservation.Seats);
+  //TODO :UPDATE EVENT SEATS AS RESERVED
+  //Seats provided here are already checked by frontend to be vacant
+
+  NewReservation.save((err, doc) => {
+    if (!err) {
+
+      res.json({ "Reservation Added": true });
+    }
+    else {
+      res.json({ "Reservation Added": false, "error": err });
+      // console.log('error during user insertion: ' + err);
+    }
+  });
+
+});
+
+
+//Remove Reservation by EventID and Username
+router.post('/Remove', async (req, res) => {
+  let isfound = await Reservation.findOne({ Username: req.body.Username, EventId: req.body.EventId });
+  if (!isfound)
+    res.status(400).send({ "ReturnedMsg": "Reservation doesn't exist" });
+
+  let check = await Reservation.remove({ Username: req.body.Username, EventId: req.body.EventId });
+  if (check) return res.status(200).send({ "ReturnMsg": "Reservation Removed" });
+  else
+    res.status(400).send({ "ReturnedMsg": "error not removed" });
+
+});
+
+
+module.exports = router;

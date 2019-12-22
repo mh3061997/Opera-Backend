@@ -21,7 +21,7 @@ const EventSchema = new mongoose.Schema({
         type: Date,
         default: "01/01/2008"
     },
-    HallNumber: {
+    HallId: {
         type: Number
     },
     EventId: {
@@ -46,27 +46,28 @@ router.post('/Create', async (req, res) => { //sends post request to /Authors/un
     NewEvent.Description = req.body.Description;
     NewEvent.EventPoster = req.body.EventPoster;
     NewEvent.Datetime = req.body.Datetime;
-    NewEvent.HallNumber = req.body.HallNumber;
+    NewEvent.HallId = req.body.HallId;
     NewEvent.EventId = parseInt(req.body.EventId);
 
-    console.log(req.body);
-    var ifHall = await Hall.findOne({ HallId: req.body.HallNumber });
-    console.log(ifHall);
+    //console.log(req.body);
+    var ifHall = await Hall.findOne({ HallId: req.body.HallId });
+    //console.log(ifHall);
     if (ifHall)
-        SeatsCount = Hall.SeatsCount;
+        SeatsCount = parseInt(ifHall.SeatsCount);
     else
         return res.status(400).json({ Msg: "Invalid Hall Number" });
 
     var SeatTempArray = new Array();
-
+    console.log(SeatsCount);
     for (var i = 1; i <= SeatsCount; i++) {
         let obj = {
             SeatNumber: i,
             IsReserved: false
         };
+        console.log(obj);
         SeatTempArray.push(obj);
     }
-
+    console.log(SeatTempArray);
     NewEvent.Seats = SeatTempArray;
 
 
@@ -92,6 +93,28 @@ router.post('/Remove', async (req, res) => { //sends post request to /Authors/un
     if (check) return res.status(200).send({ "ReturnMsg": "Event Removed" });
     else
         res.status(400).send({ "ReturnedMsg": "error not removed" });
+
+});
+
+
+
+//Update Event Poster by EventID
+router.post('/UpdatePoster', async (req, res) => { //sends post request to /Authors/unFollow End point through the router
+
+    let check = await Event.findOneAndUpdate({ EventId: req.body.EventId }, {
+       
+        EventPoster : req.body.EventPoster
+        //Datetime not updatable only at creation
+        //EventId unique not updatable
+
+        //TODO: ADD CHECK HALLNUMBER AND UPDATE SEATS 
+
+    });
+    if (check) return res.status(200).send({ "ReturnMsg": "Event Poster  Updated" });
+    else
+        res.status(400).send({ "ReturnedMsg": "error not updated" });
+   
+
 
 });
 

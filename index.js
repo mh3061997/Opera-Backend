@@ -19,8 +19,9 @@ mongoose.connect('mongodb://localhost:27017/Opera',{ useNewUrlParser: true,useUn
 
   autoIncrement.initialize(mongoose.connection);
 
-  app.use(bodyParser.json()); // support json encoded bodies
-  app.use(bodyParser.urlencoded({ extended: false })); // support encoded bodies
+  //limit to allow for large requests with images
+  app.use(bodyParser.json({limit: '50mb'})); // support json encoded bodies
+  app.use(bodyParser.urlencoded({ extended: false,limit: '50mb' })); // support encoded bodies
   
 //app.use(bodyParser.urlencoded({ extended: true }));
 // 
