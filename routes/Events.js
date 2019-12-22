@@ -4,38 +4,9 @@ const express = require('express');
 const router = express.Router();
 const autoIncrement = require('mongoose-auto-increment');
 const Hall=require('./Models/Hall').Hall;
+const Event=require('./Models/Event').Event;
 //autoIncrement.initialize(mongoose.connection);
 
-const EventSchema = new mongoose.Schema({
-    EventName: {
-        type: String,
-        required: true,
-    },
-    Description: {
-        type: String
-    },
-    EventPoster: {
-        type: String
-    },
-    Datetime: {
-        type: Date,
-        default: "01/01/2008"
-    },
-    HallId: {
-        type: Number
-    },
-    EventId: {
-        type: Number,
-        default: 0
-    },
-    Seats: [{
-        SeatNumber: String,
-        IsReserved: Boolean
-    }]
-
-}, { collection: 'Events' });
-const Event = mongoose.model('Event', EventSchema);
-//EventSchema.plugin(autoIncrement.plugin, { model: 'Event', field: 'EventId' });
 
 
 //Create New Event
@@ -107,7 +78,7 @@ router.post('/UpdatePoster', async (req, res) => { //sends post request to /Auth
         //Datetime not updatable only at creation
         //EventId unique not updatable
 
-        //TODO: ADD CHECK HALLNUMBER AND UPDATE SEATS 
+     
 
     });
     if (check) return res.status(200).send({ "ReturnMsg": "Event Poster  Updated" });
@@ -122,16 +93,38 @@ router.post('/UpdatePoster', async (req, res) => { //sends post request to /Auth
 //Update Event Details
 router.post('/Update', async (req, res) => { //sends post request to /Authors/unFollow End point through the router
 
+        //TODO: ADD CHECK HALLNUMBER AND UPDATE SEATS 
+      //console.log(req.body);
+      var ifHall = await Hall.findOne({ HallId: req.body.HallId });
+      //console.log(ifHall);
+      if (ifHall)
+          SeatsCount = parseInt(ifHall.SeatsCount);
+      else
+          return res.status(400).json({ Msg: "Invalid Hall Number" });
+  
+      var SeatTempArray = new Array();
+      console.log(SeatsCount);
+      for (var i = 1; i <= SeatsCount; i++) {
+          let obj = {
+              SeatNumber: i,
+              IsReserved: false
+          };
+          console.log(obj);
+          SeatTempArray.push(obj);
+      }
+      console.log(SeatTempArray);
+     
+    
+
+      
     let check = await Event.findOneAndUpdate({ EventId: req.body.EventId }, {
         EventName : req.body.EventName,
         Description : req.body.Description,
         EventPoster : req.body.EventPoster,
         HallNumber : req.body.HallNumber,
+        Seats:SeatTempArray
         //Datetime not updatable only at creation
         //EventId unique not updatable
-
-        //TODO: ADD CHECK HALLNUMBER AND UPDATE SEATS 
-
     });
     if (check) return res.status(200).send({ "ReturnMsg": "Event  Updated" });
     else

@@ -2,7 +2,7 @@
 const mongoose = require('mongoose');
 const express = require('express');
 const router = express.Router();
-
+const Event=require('./Models/Event').Event;
 const ReservationSchema = new mongoose.Schema({
   ReservationId: {
     type: String,
@@ -69,8 +69,23 @@ router.post('/Create', async (req, res) => {
   NewReservation.CreditCardNumber = req.body.CreditCardNumber;
   NewReservation.Seats = req.body.Seats; //array of seat numbers
 console.log(NewReservation.Seats);
+
   //TODO :UPDATE EVENT SEATS AS RESERVED
   //Seats provided here are already checked by frontend to be vacant
+  let ifevent = await Event.findOne({EventId:req.body.EventId});
+  if(!ifevent)
+  return res.status(400).json({Message:'Invalid Event Id Number'});
+
+  console.log(ifevent);
+    //iterate on all seats 
+    NewReservation.Seats.forEach(seatnum => {
+      ifevent.Seats[parseInt(seatnum)].IsReserved=true;
+     
+    });
+    //remove old event
+    await Event.remove({EventId:ifevent.EventId});
+    //add updated Event
+    await Event.insertMany(ifevent);
 
   NewReservation.save((err, doc) => {
     if (!err) {
