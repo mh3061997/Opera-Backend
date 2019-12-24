@@ -80,7 +80,7 @@ router.post("/Login", async (req, res) => {
     Username: req.body.Username,
     Password: req.body.Password
   });
-  if (check) return res.status(200).send({ ReturnMsg: "LoggedIn" });
+  if (check) return res.status(200).send(check);
   else res.status(400).send({ ReturnedMsg: "Wrong User Name or password " });
 });
 
