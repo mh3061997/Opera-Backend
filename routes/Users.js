@@ -1,145 +1,135 @@
-
-const mongoose = require('mongoose');
-const express = require('express');
+const mongoose = require("mongoose");
+const express = require("express");
 const router = express.Router();
 
-
-const UserSchema = new mongoose.Schema({
+const UserSchema = new mongoose.Schema(
+  {
     Username: {
-        type: String,
-        required: true,
-        unique: true
+      type: String,
+      required: true,
+      unique: true
     },
     Password: {
-        type: String
+      type: String
     },
     FirstName: {
-        type: String
+      type: String
     },
     LastName: {
-        type: String
+      type: String
     },
     BirthDate: {
-        type: Date,
-        default: "01/01/2008"
+      type: Date,
+      default: "01/01/2008"
     },
     Gender: {
-        type: String
+      type: String
     },
-    City: {
-        type: String,
-    },
+
     Address: {
-        type: String,
+      type: String
     },
     Email: {
-        type: String,
-        unique: true,
-        dropDups: true,
-        required: true
+      type: String,
+      unique: true,
+      dropDups: true,
+      required: true
     },
     Priv: {
-        type: Number,
-        default: 3
+      type: Number,
+      default: 3
     }
+  },
+  { collection: "Users" }
+);
 
-},{collection:'Users'});
-
-
-const User = mongoose.model('User', UserSchema);
-
+const User = mongoose.model("User", UserSchema);
 
 //Create New User
-router.post('/Register', async (req, res) => { 
-    var NewUser = new User();
-    console.log(req.body);
-    NewUser.Username = req.body.Username;
-    NewUser.Password = req.body.Password;
-    NewUser.FirstName = req.body.FirstName;
-    NewUser.LastName = req.body.LastName;
-    NewUser.BirthDate = req.body.BirthDate;
-    NewUser.Gender = req.body.Gender;
-    NewUser.City = req.body.City;
-    NewUser.Address = req.body.Address;
-    NewUser.Email = req.body.Email;
-    NewUser.Priv = req.body.Priv;
+router.post("/Register", async (req, res) => {
+  var NewUser = new User();
+  console.log(req.body);
+  NewUser.Username = req.body.Username;
+  NewUser.Password = req.body.Password;
+  NewUser.FirstName = req.body.FirstName;
+  NewUser.LastName = req.body.LastName;
+  NewUser.BirthDate = req.body.BirthDate;
+  NewUser.Gender = req.body.Gender;
 
-    let check = await User.findOne({ Username: req.body.Username });
-    if (check) return res.status(400).send({ "ReturnMsg": "User Already Exits" });
+  NewUser.Address = req.body.Address;
+  NewUser.Email = req.body.Email;
+  NewUser.Priv = req.body.Priv;
 
-    //if user doesn't exist create him
-    NewUser.save((err, doc) => {
-        if (!err) {
+  let check = await User.findOne({ Username: req.body.Username });
+  if (check) return res.status(400).send({ ReturnMsg: "User Already Exits" });
 
-            res.json({ "UserAdded": true });
-        }
-        else {
-            res.json({ "UserAdded": false });
-            console.log('error during user insertion: ' + err);
-        }
-    });
-
+  //if user doesn't exist create him
+  NewUser.save((err, doc) => {
+    if (!err) {
+      res.json({ UserAdded: true });
+    } else {
+      res.json({ UserAdded: false });
+      console.log("error during user insertion: " + err);
+    }
+  });
 });
 
-
 //Get User
-router.post('/Login', async (req, res) => { 
-
-    let check = await User.findOne({ Username: req.body.Username,Password:req.body.Password });
-    if (check) return res.status(200).send({ "ReturnMsg": "LoggedIn" });
-    else 
-    res.status(400).send({"ReturnedMsg":"Wrong User Name or password "});
-   
+router.post("/Login", async (req, res) => {
+  let check = await User.findOne({
+    Username: req.body.Username,
+    Password: req.body.Password
+  });
+  if (check) return res.status(200).send({ ReturnMsg: "LoggedIn" });
+  else res.status(400).send({ ReturnedMsg: "Wrong User Name or password " });
 });
 
 //Change User Authority
-router.post('/Authority', async (req, res) => { 
-
-    let check = await User.findOneAndUpdate({ Username: req.body.Username},{Priv:req.body.Priv});
-    if (check) return res.status(200).send({ "ReturnMsg": "User Authority Updated" });
-    else 
-    res.status(400).send({"ReturnedMsg":"error not updated"});
-   
+router.post("/Authority", async (req, res) => {
+  let check = await User.findOneAndUpdate(
+    { Username: req.body.Username },
+    { Priv: req.body.Priv }
+  );
+  if (check)
+    return res.status(200).send({ ReturnMsg: "User Authority Updated" });
+  else res.status(400).send({ ReturnedMsg: "error not updated" });
 });
 
 //Update User Details
-router.post('/Update', async (req, res) => { 
+router.post("/Update", async (req, res) => {
+  let check = await User.findOneAndUpdate(
+    { Username: req.body.Username },
+    {
+      // priv not updatable only by admin
+      //username and email not updatable
+      Password: req.body.Password,
+      FirstName: req.body.FirstName,
+      LastName: req.body.LastName,
+      Birthdate: req.body.Birthdate,
+      Gender: req.body.Gender,
 
-    let check = await User.findOneAndUpdate({ Username: req.body.Username},{
-       // priv not updatable only by admin
-       //username and email not updatable
-        Password:req.body.Password,
-        FirstName:req.body.FirstName,
-        LastName:req.body.LastName,
-        Birthdate:req.body.Birthdate,
-        Gender:req.body.Gender,
-        City:req.body.City,
-        Address:req.body.Address,
-        Email:req.body.Email
-    });
-    if (check) return res.status(200).send({ "ReturnMsg": "User details Updated" });
-    else 
-    res.status(400).send({"ReturnedMsg":"error not updated"});
-   
+      Address: req.body.Address,
+      Email: req.body.Email
+    }
+  );
+  if (check) return res.status(200).send({ ReturnMsg: "User details Updated" });
+  else res.status(400).send({ ReturnedMsg: "error not updated" });
 });
 
 //Remove User
-router.post('/Remove', async (req, res) => { 
-
-    let check = await User.remove({ Username: req.body.Username});
-    if (check) return res.status(200).send({ "ReturnMsg": "User Removed" });
-    else 
-    res.status(400).send({"ReturnedMsg":"error not removed"});
-   
+router.post("/Remove", async (req, res) => {
+  let check = await User.remove({ Username: req.body.Username });
+  if (check) return res.status(200).send({ ReturnMsg: "User Removed" });
+  else res.status(400).send({ ReturnedMsg: "error not removed" });
 });
 
 module.exports = router;
 // ///////////////////////////////////////////////////////////////////////////////////
-// //Find Author by Name 
+// //Find Author by Name
 // /**
 // * @api{GET}/api/Author/?auth_name=Value Find an author by name
-// * @apiName Find author by name 
-// * @apiGroup Author 
+// * @apiName Find author by name
+// * @apiGroup Author
 // * @apiError {404} name-not-found Author could not be found
 // * @apiErrorExample {JSON}
 // *HTTP/1.1 404 Not Found
@@ -151,7 +141,7 @@ module.exports = router;
 // * @apiSuccess {JSON} Author data for the required Author
 // * @apiSuccessExample
 // * HTTP/1.1 200 OK
-// * 
+// *
 // {
 //        "_id" : ObjectId("5c9284d5e0a57a14e749981a"),
 //        "BookId" : [
@@ -167,8 +157,6 @@ module.exports = router;
 //  }
 // */
 
-
-
 // router.get('/', async (req, res) => {
 
 //     /*
@@ -178,14 +166,13 @@ module.exports = router;
 //     console.log(req.params.auth_name.auth_name);
 //    */
 
-
 //     mongoose.connection.collection("Authors").findOne({ AuthorName: req.query.auth_name },
 //         (err, doc) => {
 
 //             if (!doc || err) {
 //                 //console.log(doc);
 //                 res.status(404).json({  // sends a json with 404 code
-//                     success: false,  // user not retrieved  
+//                     success: false,  // user not retrieved
 //                     "Message": "Author Name not  found !"
 //                 });
 //             }
@@ -196,16 +183,15 @@ module.exports = router;
 //             }
 //         }
 
-
 //     )
 // });
 
 // /***************************
-// //Get info about author by id 
+// //Get info about author by id
 // /**
-// * @api{GET}/api/Author/byid/?auth_id=Value Get info about author by id 
-// * @apiName Get info about author by id 
-// * @apiGroup Author 
+// * @api{GET}/api/Author/byid/?auth_id=Value Get info about author by id
+// * @apiName Get info about author by id
+// * @apiGroup Author
 // * @apiError {404} id-not-found Author could not be found
 // * @apiErrorExample {JSON}
 // *HTTP/1.1 404 Not Found
@@ -217,7 +203,7 @@ module.exports = router;
 // * @apiSuccess {JSON} Author data for the required Author
 // * @apiSuccessExample
 // * HTTP/1.1 200 OK
-// * 
+// *
 // {
 //       "_id" : ObjectId("5c9284d5e0a57a14e749981a"),
 //       "BookId" : [
@@ -233,8 +219,6 @@ module.exports = router;
 // }
 // */
 
-
-
 // router.get('/byid', async (req, res) => {
 
 //     /*
@@ -244,14 +228,13 @@ module.exports = router;
 //     console.log(req.params.auth_name.auth_name);
 //    */
 
-
 //     mongoose.connection.collection("Authors").findOne({ AuthorId: req.query.auth_id },
 //         (err, doc) => {
 
 //             if (!doc || err) {
 //                 //console.log(doc);
 //                 res.status(404).json({  // sends a json with 404 code
-//                     success: false,  // user not retrieved  
+//                     success: false,  // user not retrieved
 //                     "Message": "Author ID not  found !"
 //                 });
 //             }
@@ -262,7 +245,6 @@ module.exports = router;
 //             }
 //         }
 
-
 //     )
 // });
 
@@ -270,16 +252,16 @@ module.exports = router;
 // ///////////////////////******///////////////////////// */
 // //UNFollow Author
 // /**
-// * 
+// *
 // * @api {POST}  /api/Authors/unFollow Unfollow an Author
 // * @apiName Unfollow Author
 // * @apiGroup Author
 // * @apiError {404} id-not-found The<code>myuserId</code> was not found.
 // * @apiError {404} id-not-found The<code>auth_id</code> was not found.
-// * @apiSuccess {200} UNFollow Successful 
+// * @apiSuccess {200} UNFollow Successful
 // * @apiParam  {String} myuserId GoodReads User ID
 // * @apiParam  {String} auth_id GoodReads Author ID
-// * 
+// *
 // * @apiSuccessExample {JSON}
 // * HTTP/1.1 200 OK
 //   {
@@ -292,12 +274,12 @@ module.exports = router;
 // * "success": false,
 // * "Message":"Author Id not  found !"
 // * }
-// *  
-// * 
+// *
+// *
 // */
 
 // //UNFollow Author
-// router.post('/unFollow', async (req, res) => { 
+// router.post('/unFollow', async (req, res) => {
 //     /* console.log(req.body.auth_id);
 //     console.log(req.auth_id);
 //     console.log(req.params.auth_id);
@@ -315,7 +297,7 @@ module.exports = router;
 //         }
 //         , function (err, doc) { // error handling and checking for returned mongo doc after query
 
-//             if (doc.matchedCount == 0 || err)   //matched count checks for number of affected documents by query 
+//             if (doc.matchedCount == 0 || err)   //matched count checks for number of affected documents by query
 //             {
 
 //                 res.status(404).json({  // sends a json with 404 code
@@ -326,14 +308,14 @@ module.exports = router;
 //             else {
 
 //                 res.status(200).json({ //sends a json with 200 code
-//                     success: true, //unFollow Done 
+//                     success: true, //unFollow Done
 //                     "Message": "Sucessfully done"
 //                 });
 //             }
 //         });
 //     mongoose.connection.collection("Users").updateOne(
 //         {
-//             UserId: req.query.myuserId//access document of currently logged In user 
+//             UserId: req.query.myuserId//access document of currently logged In user
 //         },
 //         {
 //             $pull: { // pull from end of array of the Authors that the user follows
@@ -341,22 +323,20 @@ module.exports = router;
 //             }
 //         });
 
-
 // });
-
 
 // //Follow Author
 // /**
-// * 
+// *
 // * @api {POST}  /api/Authors/Follow follow an Author
 // * @apiName follow Author
 // * @apiGroup Author
 // * @apiError {404} id-not-found The<code>myuserId</code> was not found.
 // * @apiError {404} id-not-found The<code>auth_id</code> was not found.
-// * @apiSuccess {200} UNFollow Successful 
+// * @apiSuccess {200} UNFollow Successful
 // * @apiParam  {String} myuserId GoodReads User ID
 // * @apiParam  {String} auth_id GoodReads Author ID
-// * 
+// *
 // * @apiSuccessExample {JSON}
 // * HTTP/1.1 200 OK
 //   {
@@ -390,7 +370,7 @@ module.exports = router;
 //         }
 //         , function (err, doc) { // error handling and checking for returned mongo doc after query
 
-//             if (doc.matchedCount == 0 || err)   //matched count checks for number of affected documents by query 
+//             if (doc.matchedCount == 0 || err)   //matched count checks for number of affected documents by query
 //             {
 
 //                 res.status(404).json({  // sends a json with 404 code
@@ -401,14 +381,14 @@ module.exports = router;
 //             else {
 
 //                 res.status(200).json({ //sends a json with 200 code
-//                     success: true, //Follow Done 
+//                     success: true, //Follow Done
 //                     "Message": "Sucessfully done"
 //                 });
 //             }
 //         });
 //     mongoose.connection.collection("Users").updateOne(
 //         {
-//             UserId: req.query.myuserId//access document of currently logged In user 
+//             UserId: req.query.myuserId//access document of currently logged In user
 //         },
 //         {
 //             $push: { // push to end of array of the Authors that the user follows
@@ -416,6 +396,4 @@ module.exports = router;
 //             }
 //         });
 
-
 // });
-
