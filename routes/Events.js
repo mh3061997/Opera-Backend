@@ -1,4 +1,6 @@
 
+
+
 const mongoose = require('mongoose');
 const express = require('express');
 const router = express.Router();
@@ -8,6 +10,33 @@ const Event=require('./Models/Event').Event;
 //autoIncrement.initialize(mongoose.connection);
 
 
+//Create New Event
+router.get('/:ids', async (req, res) => { //sends post request to /Authors/unFollow End point through the router
+   
+
+    Event.findOne({EventId:req.params.ids},(err,doc)=>{
+
+        if(doc){
+          //  console.log(doc);
+            var allseats=[];
+            for(let obj in doc.Seats){
+                console.log(obj);
+
+                if(doc.Seats[obj].IsReserved===true){
+                    allseats.push(2);
+                }
+             
+                else
+                allseats.push(0);
+            }
+           
+            res.status(200).json(allseats);
+        }else
+        res.status(400).json({"msg":"failed"});
+
+    });
+   
+});
 
 //Create New Event
 router.post('/Create', async (req, res) => { //sends post request to /Authors/unFollow End point through the router
