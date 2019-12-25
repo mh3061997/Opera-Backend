@@ -28,7 +28,7 @@ const ReservationSchema = new mongoose.Schema(
 const Reservation = mongoose.model("Reservation", ReservationSchema);
 
 //get reservation by EventID
-router.get("/", async (req, res) => {
+router.get("/:ids", async (req, res) => {
   /*
   console.log(req.params);
   console.log(req.params.auth_name);
@@ -37,22 +37,19 @@ router.get("/", async (req, res) => {
  */
   //console.log(req.query.ReservationId); /// ONLY WORKING
 
-  Reservation.find({EventId:req.query.EventId},(err, doc) => {
-
+  Reservation.find({ EventId: req.params.ids }, (err, doc) => {
     if (!doc || err) {
-
-        // console.log(doc);
-        res.status(400).json({  // sends a json with 404 code
-            success: false,  // user not retrieved  
-            "Message": "No Reservations available!"
-        });
+      // console.log(doc);
+      res.status(400).json({
+        // sends a json with 404 code
+        success: false, // user not retrieved
+        Message: "No Reservations available!"
+      });
+    } else {
+      console.log(doc);
+      res.send(doc);
     }
-    else {
-        console.log(doc);
-        res.send(doc);
-
-    }
-})
+  });
 });
 // //get reservation by EventID
 // router.get("/", async (req, res) => {
