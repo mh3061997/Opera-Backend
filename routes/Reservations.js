@@ -28,7 +28,7 @@ const ReservationSchema = new mongoose.Schema(
 const Reservation = mongoose.model("Reservation", ReservationSchema);
 
 //get reservation by EventID
-router.get("/:ids", async (req, res) => {
+router.get("/", async (req, res) => {
   /*
   console.log(req.params);
   console.log(req.params.auth_name);
@@ -37,22 +37,49 @@ router.get("/:ids", async (req, res) => {
  */
   //console.log(req.query.ReservationId); /// ONLY WORKING
 
-  mongoose.connection
-    .collection("Reservations")
-    .findOne({ EventId: req.params.ids }, (err, doc) => {
-      if (!doc || err) {
-        //console.log(doc);
-        res.status(400).json({
-          // sends a json with 404 code
-          success: false, // user not retrieved
-          Message: "Reservation not  found !"
+  Reservation.find({EventId:req.query.EventId},(err, doc) => {
+
+    if (!doc || err) {
+
+        // console.log(doc);
+        res.status(400).json({  // sends a json with 404 code
+            success: false,  // user not retrieved  
+            "Message": "No Reservations available!"
         });
-      } else {
-        //console.log(doc);
-        res.status(200).json(doc);
-      }
-    });
+    }
+    else {
+        console.log(doc);
+        res.send(doc);
+
+    }
+})
 });
+// //get reservation by EventID
+// router.get("/", async (req, res) => {
+//   /*
+//   console.log(req.params);
+//   console.log(req.params.auth_name);
+//   console.log(req.query.auth_name); /// ONLY WORKING
+//   console.log(req.params.auth_name.auth_name);
+//  */
+//   //console.log(req.query.ReservationId); /// ONLY WORKING
+
+//   mongoose.connection
+//     .collection("Reservations")
+//     .findOne({ EventId: req.params.ids }, (err, doc) => {
+//       if (!doc || err) {
+//         //console.log(doc);
+//         res.status(400).json({
+//           // sends a json with 404 code
+//           success: false, // user not retrieved
+//           Message: "Reservation not  found !"
+//         });
+//       } else {
+//         //console.log(doc);
+//         res.status(200).json(doc);
+//       }
+//     });
+// });
 
 //Create New Reservation
 router.post("/Create", async (req, res) => {
