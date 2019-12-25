@@ -46,7 +46,8 @@ router.get("/:ids", async (req, res) => {
         Message: "No Reservations available!"
       });
     } else {
-      console.log(doc);
+     
+     console.log(doc);
       res.send(doc);
     }
   });
@@ -129,8 +130,32 @@ router.post("/Remove", async (req, res) => {
     Username: req.body.Username,
     EventId: req.body.EventId
   });
+  
+  let ifevent = await Event.findOne({ EventId: req.body.EventId });
+  if (!ifevent)
+    return res.status(400).json({ Message: "Invalid Event Id Number" });
+/////////
+let ifevent = await Event.findOne({ EventId: req.body.EventId });
+  if (!ifevent)
+    return res.status(400).json({ Message: "Invalid Event Id Number" });
+
+  console.log(ifevent);
+  //iterate on all seats
+  NewReservation.Seats.forEach(seatnum => {
+    ifevent.Seats[parseInt(seatnum)].IsReserved = true;
+  });
+  //remove old event
+  await Event.remove({ EventId: ifevent.EventId });
+  //add updated Event
+  await Event.insertMany(ifevent);
+
   if (check) return res.status(200).send({ ReturnMsg: "Reservation Removed" });
   else res.status(400).send({ ReturnedMsg: "error not removed" });
+
+
+  
+  });
+
 });
 
 module.exports = router;
